@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon Application</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Vous pouvez ajouter d'autres liens CSS ici -->
 </head>
@@ -31,28 +32,19 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('home') }}">Home</a>
                             </li>
-                          
-                            
-        <div class="nav-item">
-            <a class="nav-link" href="{{ route('inventories.index') }}">Inventaires</a>
-        </div>
-        <!-- Lien vers les inventaires -->
-        <li class="nav-item">
+                            <div class="nav-item">
+                                <a class="nav-link" href="{{ route('inventories.index') }}">Inventaires</a>
+                            </div>
+                            <li class="nav-item">
                                 <a class="nav-link" href="{{ route('storeinventories.index') }}">Inventaires Magasin</a>
                             </li>
-
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('users.index') }}">Utilisateurs</a>
                             </li>
-                           
-                         
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('stores.index') }}">Magasins</a>
                             </li>
-
-
-                
-                  <li class="nav-item">
+                            <li class="nav-item">
                                 <a class="nav-link" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
                                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                                     @csrf
@@ -69,8 +61,38 @@
         </main>
     </div>
 
+    <!-- Charger jQuery en premier -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+    <!-- Ensuite, Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Vous pouvez ajouter d'autres scripts ici -->
+
+    <!-- Ensuite, DataTables -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <!-- Enfin, votre script personnalisé -->
+    <script>
+        jQuery(document).ready(function() {
+            jQuery('#inventoriesTable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json", // Traduction en français
+                    "search": "Rechercher :", // Texte de la barre de recherche
+                    "lengthMenu": "Afficher _MENU_ entrées", // Texte du menu déroulant
+                    "info": "Affichage de _START_ à _END_ sur _TOTAL_ entrées", // Informations sous le tableau
+                    "paginate": {
+                        "first": "Première", // Bouton "Première"
+                        "last": "Dernière", // Bouton "Dernière"
+                        "next": "Suivant", // Bouton "Suivant"
+                        "previous": "Précédent" // Bouton "Précédent"
+                    }
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": [3] } // Désactiver le tri sur la colonne "Actions" (index 3)
+                ],
+                "order": [[2, "desc"]] // Trier par défaut par la colonne "Créé le" (ordre décroissant)
+            });
+        });
+    </script>
 </body>
 
 </html>

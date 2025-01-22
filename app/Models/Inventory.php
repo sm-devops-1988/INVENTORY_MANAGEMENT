@@ -1,7 +1,5 @@
 <?php
 
-// app/Models/Inventory.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,8 +9,11 @@ class Inventory extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];  // Assurez-vous que le champ 'name' est dans le tableau 'fillable'
-
+    // Champs remplissables (mass assignable)
+    protected $fillable = [
+        'name',
+        'type', // Ajoutez cette ligne
+    ];
 
     // Relation avec StoreInventory
     public function storeInventories()
@@ -20,4 +21,3 @@ class Inventory extends Model
         return $this->hasMany(StoreInventory::class);
     }
 }
-

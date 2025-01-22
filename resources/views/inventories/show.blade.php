@@ -44,8 +44,8 @@
         </table>
     @endif
 
-    <!-- Afficher le formulaire d'importation de produits uniquement si tous les magasins ne sont pas encore importés -->
-    @if(!$inventory->storeInventories->every(fn($storeInventory) => $storeInventory->status === 'imported'))
+    <!-- Afficher le formulaire d'importation de produits uniquement pour le type "all" -->
+    @if($inventory->type === 'all' && !$inventory->storeInventories->every(fn($storeInventory) => $storeInventory->status === 'imported'))
         <h3 class="mt-4">Importer des Produits pour tous les magasins associés</h3>
         <form action="{{ route('inventories.import', $inventory->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -74,7 +74,7 @@
             <!-- Bouton pour soumettre le formulaire d'importation -->
             <button type="submit" class="btn btn-primary">Importer les produits</button>
         </form>
-    @else
+    @elseif($inventory->type === 'all')
         <p>Tous les magasins associés ont déjà été importés.</p>
     @endif
 

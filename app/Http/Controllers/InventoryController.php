@@ -10,6 +10,7 @@ use App\Models\Store;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StoreInventoryItemsImport;
 use App\Imports\StoreSpecificInventoryItemsImport;
+use App\Http\Controllers\InventoryController;
 
 class InventoryController extends Controller
 {
@@ -40,18 +41,21 @@ class InventoryController extends Controller
 
     // Save a new inventory to the database
     public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
+{
+    // Validation des données
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'type' => 'required|in:libre,specific,all', // Ajoutez cette ligne
+    ]);
 
-        $inventory = Inventory::create([
-            'name' => $request->name,
-        ]);
+    // Création de l'inventaire
+    $inventory = Inventory::create([
+        'name' => $request->name,
+        'type' => $request->type, // Ajoutez cette ligne
+    ]);
 
-        return redirect()->route('inventories.index')->with('success', 'Inventaire créé avec succès.');
-    }
-
+    return redirect()->route('inventories.index')->with('success', 'Inventaire créé avec succès.');
+}
     // Display the form to edit an inventory
     public function edit($id)
     {

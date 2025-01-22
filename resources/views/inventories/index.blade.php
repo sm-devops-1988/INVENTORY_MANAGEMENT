@@ -10,12 +10,13 @@
         </div>
     @endif
 
-    <a href="{{ route('inventories.create') }}" class="btn btn-primary mb-3">Créer un Nouvel Inventaire</a>
+    <a href="{{ route('inventories.create') }}" class="mb-3 btn btn-primary">Créer un Nouvel Inventaire</a>
 
-    <table class="table table-bordered">
+    <table id="inventoriesTable" class="table table-bordered display">
         <thead>
             <tr>
                 <th>Nom</th>
+                <th>Type</th>
                 <th>Créé le</th>
                 <th>Actions</th>
             </tr>
@@ -24,24 +25,16 @@
             @foreach($inventories as $inventory)
                 <tr>
                     <td>{{ $inventory->name }}</td>
+                    <td>{{ $inventory->type }}</td>
                     <td>{{ $inventory->created_at->format('d/m/Y') }}</td>
-                 
                     <td>
-               
-    <!-- View Button -->
-    <a href="{{ route('inventories.show', $inventory->id) }}" class="btn btn-info">Voir</a>
-
-    <!-- Edit Button -->
-    <a href="{{ route('inventories.edit', $inventory->id) }}" class="btn btn-warning">Éditer</a>
-
-    <!-- Delete Button -->
-    <form action="{{ route('inventories.destroy', $inventory->id) }}" method="POST" style="display:inline;">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet inventaire ?')">Supprimer</button>
-    </form>
-
-
+                        <a href="{{ route('inventories.show', $inventory->id) }}" class="btn btn-info">Voir</a>
+                        <a href="{{ route('inventories.edit', $inventory->id) }}" class="btn btn-warning">Éditer</a>
+                        <form action="{{ route('inventories.destroy', $inventory->id) }}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet inventaire ?')">Supprimer</button>
+                        </form>
                     </td>
                 </tr>
             @endforeach
