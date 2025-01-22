@@ -9,15 +9,13 @@ use App\Models\Store;
 class UserController extends Controller
 {
     // Affiche tous les magasins avec leurs utilisateurs
-    public function index()
+    public function index(Request $request)
     {
-        // Récupérer les magasins avec leurs utilisateurs associés
-        $stores = Store::with('users')->get();
+        // Paginer tous les utilisateurs (10 par page)
+        $users = User::with('store')->paginate(10);
     
-        // Retourner la vue avec les magasins et utilisateurs
-        return view('users.index', compact('stores'));
+        return view('users.index', compact('users'));
     }
-
     // Affiche un utilisateur spécifique
     public function show($id)
     {
@@ -35,23 +33,27 @@ class UserController extends Controller
     // Enregistre un nouvel utilisateur
     public function store(Request $request)
     {
-        // Valider la requête
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'store_id' => 'required|exists:stores,id', // Valider le store_id
-        ]);
-
-        // Créer l'utilisateur
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'store_id' => $request->store_id,
-        ]);
-
-        return redirect()->route('users.index')->with('success', 'Utilisateur créé avec succès');
+        try {
+            // Valider la requête
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8|confirmed',
+                'store_id' => 'required|exists:stores,id', // Valider le store_id
+            ]);
+    
+            // Créer l'utilisateur
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'store_id' => $request->store_id,
+            ]);
+    
+            return redirect()->route('users.index')->with('success', 'Utilisateur créé avec succès');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erreur lors de la création de l\'utilisateur : ' . $e->getMessage());
+        }
     }
 
     // Affiche le formulaire pour éditer un utilisateur
@@ -86,17 +88,29 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Utilisateur mis à jour avec succès');
     }
 
-    public function byStore(Request $request)
-{
-    $storeId = $request->input('store_id');
-    $stores = Store::with('users')->get(); // Vous récupérez les magasins et leurs utilisateurs
-    
-    if ($storeId) {
-        $stores = $stores->where('id', $storeId); // Filtrer selon le magasin sélectionné
+    // Supprime un utilisateur
+    public function destroy($id)
+    {
+        // Trouver l'utilisateur par son ID
+        $user = User::findOrFail($id);
+
+        // Supprimer l'utilisateur
+        $user->delete();
+
+        // Rediriger vers la liste des utilisateurs avec un message de succès
+        return redirect()->route('users.index')->with('success', 'Utilisateur supprimé avec succès.');
     }
 
-    return view('users.index', compact('stores'));
-}
+    // Affiche les utilisateurs par magasin
+    public function byStore(Request $request)
+    {
+        $storeId = $request->input('store_id');
+        $stores = Store::with('users')->get(); // Vous récupérez les magasins et leurs utilisateurs
+    
+        if ($storeId) {
+            $stores = $stores->where('id', $storeId); // Filtrer selon le magasin sélectionné
+        }
 
+        return view('users.index', compact('stores'));
+    }
 }
-
