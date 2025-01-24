@@ -5,6 +5,8 @@ use App\Models\Inventory;
 use App\Models\StoreInventory;
 use App\Models\StoreInventoryItem;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\StoreInventoryItemsExport;
 
 class StoreInventoryItemController extends Controller
 {
