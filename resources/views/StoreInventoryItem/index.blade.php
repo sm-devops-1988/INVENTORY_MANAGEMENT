@@ -1,49 +1,78 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <h1>Inventaire : {{ $storeInventory->name }}</h1>
-    <a href="{{ route('storeinventoryitems.create', $storeInventory->id) }}" class="btn btn-primary mb-3">Ajouter un item</a>
+<div class="container mt-5">
+    <h1>Les inventaires unifiés</h1>
 
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
+     <!-- Formulaire de sélection d'inventaire et de statut -->
+     <form action="{{ route('StoreInventoryItem.index') }}" method="GET" class="mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <label for="inventory_id">Sélectionner un inventaire :</label>
+                <select name="inventory_id" id="inventory_id" class="form-control" onchange="this.form.submit()">
+                    <option value="">Tous les inventaires</option>
+                    @foreach ($inventories as $inventory)
+                        <option value="{{ $inventory->id }}" {{ $selectedInventoryId == $inventory->id ? 'selected' : '' }}>
+                            {{ $inventory->name }} ({{ $inventory->type }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="status">Sélectionner un statut :</label>
+                <select name="status" id="status" class="form-control" onchange="this.form.submit()">
+                    <option value="">Tous les statuts</option>
+                    @foreach ($statuses as $status)
+                        <option value="{{ $status }}" {{ $selectedStatus == $status ? 'selected' : '' }}>
+                            {{ ucfirst($status) }} <!-- Afficher le statut avec une majuscule -->
+                        </option>
+                    @endforeach
+                </select>
+            </div>
         </div>
-    @endif
+    </form>
 
-    @if($storeInventoryItems->isEmpty())
-        <p>Aucun item trouvé pour cet inventaire.</p>
-    @else
-        <table class="table table-bordered">
-            <thead>
+    <!-- Bouton d'exportation -->
+    <form action="{{ route('StoreInventoryItem.export') }}" method="GET" class="mb-4">
+        <input type="hidden" name="inventory_id" value="{{ $selectedInventoryId }}">
+        <input type="hidden" name="status" value="{{ $selectedStatus }}">
+        <button type="submit" class="btn btn-success">
+            Exporter vers Excel
+        </button>
+    </form>
+
+    <!-- Tableau des éléments d'inventaire -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Store Inventory ID</th>
+                <th>ID Inventaire</th>
+                <th>Nom de l'inventaire</th>
+                <th>Magasin</th>
+                <th>Product Name</th>
+                <th>Product Code</th>
+                <th>Count 1</th>
+                <th>Count 2</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($items as $item)
                 <tr>
-                    <th>Nom du produit</th>
-                    <th>Code du produit</th>
-                    <th>Compteur 1</th>
-                    <th>Compteur 2</th>
-                    <th>Actions</th>
+                    <td>{{ $item->id }}</td>
+                    <td>{{ $item->store_inventory_id }}</td>
+                    <td>{{ $item->storeInventory->inventory->id }}</td>
+                    <td>{{ $item->storeInventory->inventory->name }}</td>
+                    <td>{{ $item->storeInventory->store->name }}</td>
+                    <td>{{ $item->product_name }}</td>
+                    <td>{{ $item->product_code }}</td>
+                    <td>{{ $item->count_1 }}</td>
+                    <td>{{ $item->count_2 }}</td>
+                    <td>{{ $item->created_at }}</td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach($storeInventoryItems as $item)
-                    <tr>
-                        <td>{{ $item->product_name }}</td>
-                        <td>{{ $item->product_code }}</td>
-                        <td>{{ $item->count_1 }}</td>
-                        <td>{{ $item->count_2 }}</td>
-                        <td>
-                            <a href="{{ route('storeinventoryitems.show', $item->id) }}" class="btn btn-info btn-sm">Voir</a>
-                            <a href="{{ route('storeinventoryitems.edit', $item->id) }}" class="btn btn-warning btn-sm">Modifier</a>
-                            <form action="{{ route('storeinventoryitems.destroy', $item->id) }}" method="POST" style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Confirmer la suppression ?')">Supprimer</button>
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    @endif
+            @endforeach
+        </tbody>
+    </table>
 </div>
 @endsection

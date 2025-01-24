@@ -11,6 +11,11 @@ use App\Http\Controllers\StoreInventoryController;
 
 
 
+Route::get('/StoreInventoryItem', [StoreInventoryItemController::class, 'index'])->name('StoreInventoryItem.index');
+
+
+Route::get('/store-inventory-items/export', [StoreInventoryItemController::class, 'export'])->name('StoreInventoryItem.export');
+
 //use App\Http\Controllers\APIInventoryController;
 //use App\Http\Controllers\API\AuthController;
 

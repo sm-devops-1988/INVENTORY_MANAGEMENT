@@ -7,7 +7,6 @@
     <title>Mon Application</title>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Vous pouvez ajouter d'autres liens CSS ici -->
 </head>
 
 <body>
@@ -35,8 +34,15 @@
                             <div class="nav-item">
                                 <a class="nav-link" href="{{ route('inventories.index') }}">Inventaires</a>
                             </div>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('storeinventories.index') }}">Inventaires Magasin</a>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="inventoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Résultats d'inventaire
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="inventoryDropdown">
+                                    <a class="dropdown-item" href="#">Inventaire libre</a>
+                                    <a class="dropdown-item" href="#">Inventaire par magasin</a>
+                                    <a class="dropdown-item" href="{{ route('StoreInventoryItem.index') }}">Inventaire unifié</a>
+                                </div>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('users.index') }}">Utilisateurs</a>
