@@ -159,7 +159,6 @@ class InventoryController extends Controller
         return redirect()->route('inventories.show', $inventoryId)->with('success', 'Produit ajouté à l\'inventaire.');
     }
 
-    // Import products for all stores
     public function import(Request $request, $inventoryId)
     {
         // Validate the file
@@ -167,17 +166,17 @@ class InventoryController extends Controller
             'product_file' => 'required|mimes:xlsx,csv',
             'store_inventory_id' => 'nullable|exists:store_inventories,id', // Optional, if a specific store is selected
         ]);
-
+    
         // Retrieve the inventory
         $inventory = Inventory::findOrFail($inventoryId);
-
+    
         // Process the Excel/CSV file
         $file = $request->file('product_file');
-
+    
         // If a specific store is selected, import for that store
         if ($request->store_inventory_id) {
             $storeInventoryId = $request->store_inventory_id;
-
+    
             // Verify before importing
             $importedItems = Excel::toArray(new StoreInventoryItemsImport($storeInventoryId), $file)[0];
             foreach ($importedItems as $item) {
@@ -185,22 +184,21 @@ class InventoryController extends Controller
                 $existingItem = StoreInventoryItem::where('store_inventory_id', $storeInventoryId)
                                                   ->where('product_code', $item['product_code'])
                                                   ->exists();
-
+    
                 // If the product already exists, skip it
                 if ($existingItem) {
                     continue;
                 }
-
+    
                 // If the product doesn't exist, add it
                 StoreInventoryItem::create([
                     'store_inventory_id' => $storeInventoryId,
                     'product_name' => $item['product_name'],
                     'product_code' => $item['product_code'],
-                    'count_1' => $item['count_1'],
-                    'count_2' => $item['count_2'] ?? 0,
+                    'onhand' => $item['onhand'], // Nouvelle colonne Onhand
                 ]);
             }
-
+    
             // Update the store inventory status to "imported"
             $storeInventory = StoreInventory::findOrFail($storeInventoryId);
             $storeInventory->status = 'imported';
@@ -214,27 +212,26 @@ class InventoryController extends Controller
                     $existingItem = StoreInventoryItem::where('store_inventory_id', $storeInventory->id)
                                                       ->where('product_code', $item['product_code'])
                                                       ->exists();
-
+    
                     if ($existingItem) {
                         continue; // Skip if the product already exists
                     }
-
+    
                     // If the product doesn't exist, add it
                     StoreInventoryItem::create([
                         'store_inventory_id' => $storeInventory->id,
                         'product_name' => $item['product_name'],
                         'product_code' => $item['product_code'],
-                        'count_1' => $item['count_1'],
-                        'count_2' => $item['count_2'] ?? 0,
+                        'onhand' => $item['onhand'], // Nouvelle colonne Onhand
                     ]);
                 }
-
+    
                 // Update the store inventory status to "imported"
                 $storeInventory->status = 'imported';
                 $storeInventory->save();
             }
         }
-
+    
         // Return a success message
         return redirect()->back()->with('success', 'Les produits ont été importés avec succès et le statut a été mis à jour.');
     }

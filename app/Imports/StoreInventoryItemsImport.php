@@ -30,8 +30,7 @@ class StoreInventoryItemsImport implements ToModel, WithHeadingRow
             'store_inventory_id' => $this->storeInventoryId,
             'product_name' => $row['product_name'],
             'product_code' => $row['product_code'],
-            'count_1' => $row['count_1'],
-            'count_2' => $row['count_2'] ?? 0,
+            'onhand' => $row['onhand'], // Nouvelle colonne Onhand
         ]);
     }
 }
