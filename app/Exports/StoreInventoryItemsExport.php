@@ -1,12 +1,9 @@
 <?php
 
-
 namespace App\Exports;
 
-use App\Models\StoreInventoryItem;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-
 
 class StoreInventoryItemsExport implements FromCollection, WithHeadings
 {
@@ -23,8 +20,6 @@ class StoreInventoryItemsExport implements FromCollection, WithHeadings
     {
         return $this->items->map(function ($item) {
             return [
-                'ID' => $item->id,
-                'Store Inventory ID' => $item->store_inventory_id,
                 'ID Inventaire' => $item->storeInventory->inventory->id,
                 'Nom de l\'inventaire' => $item->storeInventory->inventory->name,
                 'Magasin' => $item->storeInventory->store->name,
@@ -41,8 +36,6 @@ class StoreInventoryItemsExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
-            'ID',
-            'Store Inventory ID',
             'ID Inventaire',
             'Nom de l\'inventaire',
             'Magasin',
