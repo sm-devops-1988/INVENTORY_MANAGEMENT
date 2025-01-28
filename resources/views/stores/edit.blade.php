@@ -18,17 +18,22 @@
             @csrf
             @method('PUT')
 
-            <div class="mb-3">
-                <label for="name" class="form-label">Nom du Magasin</label>
-                <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $store->name) }}" required>
+            <div class="form-group">
+                <label for="name">Nom du Magasin</label>
+                <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $store->name) }}" required>
             </div>
 
-            <div class="mb-3">
-                <label for="location" class="form-label">Emplacement (optionnel)</label>
-                <input type="text" class="form-control" id="location" name="location" value="{{ old('location', $store->location) }}">
+            <div class="form-group">
+                <label for="location">Emplacement</label>
+                <input type="text" name="location" id="location" class="form-control" value="{{ old('location', $store->location) }}">
             </div>
 
-            <button type="submit" class="btn btn-success">Mettre à jour</button>
+            <div class="form-group">
+                <label for="Abr_Store">Abréviation (Abr_Store)</label>
+                <input type="text" name="Abr_Store" id="Abr_Store" class="form-control" value="{{ old('Abr_Store', $store->Abr_Store) }}" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
             <a href="{{ route('stores.index') }}" class="btn btn-secondary">Annuler</a>
         </form>
     </div>

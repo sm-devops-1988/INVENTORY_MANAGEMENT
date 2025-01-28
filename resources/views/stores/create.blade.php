@@ -2,33 +2,45 @@
 
 @section('content')
     <div class="container">
-        <h1>Ajouter un Magasin</h1>
+        <h1>Créer un Nouveau Magasin</h1>
 
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+        <div class="card">
+            <div class="card-header">
+                <h4>Formulaire de Création du Magasin</h4>
             </div>
-        @endif
+            <div class="card-body">
+                <form action="{{ route('stores.store') }}" method="POST">
+                    @csrf
 
-        <form action="{{ route('stores.store') }}" method="POST">
-            @csrf
+                    <div class="form-group">
+                        <label for="name">Nom du Magasin</label>
+                        <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required>
+                        @error('name')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
 
-            <div class="mb-3">
-                <label for="name" class="form-label">Nom du Magasin</label>
-                <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" required>
+                    <div class="form-group">
+                        <label for="location">Emplacement</label>
+                        <input type="text" name="location" id="location" class="form-control" value="{{ old('location') }}">
+                        @error('location')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Abr_Store">Abréviation du Magasin</label>
+                        <input type="text" name="Abr_Store" id="Abr_Store" class="form-control" value="{{ old('Abr_Store') }}" required>
+                        @error('Abr_Store')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
+
+                    <button type="submit" class="mt-3 btn btn-primary">Créer</button>
+                </form>
             </div>
+        </div>
 
-            <div class="mb-3">
-                <label for="location" class="form-label">Emplacement (optionnel)</label>
-                <input type="text" class="form-control" id="location" name="location" value="{{ old('location') }}">
-            </div>
-
-            <button type="submit" class="btn btn-success">Enregistrer</button>
-            <a href="{{ route('stores.index') }}" class="btn btn-secondary">Annuler</a>
-        </form>
+        <a href="{{ route('stores.index') }}" class="mt-3 btn btn-secondary">Retour à la liste</a>
     </div>
 @endsection

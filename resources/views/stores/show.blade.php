@@ -10,12 +10,13 @@
             </div>
             <div class="card-body">
                 <p><strong>Emplacement :</strong> {{ $store->location ?? 'Non spécifié' }}</p>
+                <p><strong>Abréviation (Abr_Store) :</strong> {{ $store->Abr_Store ?? 'Non spécifiée' }}</p>
                 <p><strong>Créé le :</strong> {{ $store->created_at->format('d/m/Y H:i') }}</p>
                 <p><strong>Mis à jour le :</strong> {{ $store->updated_at->format('d/m/Y H:i') }}</p>
             </div>
         </div>
 
-        <a href="{{ route('stores.edit', $store->id) }}" class="btn btn-primary mt-3">Modifier</a>
-        <a href="{{ route('stores.index') }}" class="btn btn-secondary mt-3">Retour à la liste</a>
+        <a href="{{ route('stores.edit', $store->id) }}" class="mt-3 btn btn-primary">Modifier</a>
+        <a href="{{ route('stores.index') }}" class="mt-3 btn btn-secondary">Retour à la liste</a>
     </div>
 @endsection
