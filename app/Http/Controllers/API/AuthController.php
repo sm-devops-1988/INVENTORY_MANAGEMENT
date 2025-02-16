@@ -1,12 +1,12 @@
 <?php
-
+ 
 namespace App\Http\Controllers\API;
-
+ 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-
+ 
 class AuthController extends Controller
 {
     /**
@@ -18,17 +18,17 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required|min:8',
         ]);
-
+ 
         if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json(['error' => 'Les informations de connexion sont incorrectes.'], 401);
         }
-
+ 
         // Fetch the authenticated user with the store relationship
         $user = Auth::user()->load('store');
-
+ 
         // Generate a token for the user
         $token = $user->createToken('API Token')->plainTextToken;
-
+ 
         // Return the token and user data, including the store name
         return response()->json([
             'token' => $token,
@@ -43,17 +43,17 @@ class AuthController extends Controller
             ],
         ]);
     }
-
+ 
     /**
      * Déconnexion de l'utilisateur.
      */
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
-
+ 
         return response()->json(['message' => 'Déconnexion réussie.']);
     }
-
+ 
     /**
      * Récupère les informations de l'utilisateur connecté.
      */
@@ -61,7 +61,7 @@ class AuthController extends Controller
     {
         // Fetch the authenticated user with the store relationship
         $user = $request->user()->load('store');
-
+ 
         return response()->json([
             'id' => $user->id,
             'name' => $user->name,

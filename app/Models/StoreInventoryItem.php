@@ -18,4 +18,17 @@ class StoreInventoryItem extends Model
     {
         return $this->belongsTo(StoreInventory::class);
     }
+
+ 
+     // Définition des accessors pour les champs calculés
+     public function getEcart1Attribute()
+     {
+         return $this->count_1 - $this->Onhand;
+     }
+     
+     public function getEcart2Attribute()
+     {
+         return $this->count-2 - $this->Onhand;
+     }
+     
 }

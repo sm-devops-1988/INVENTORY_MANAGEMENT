@@ -1,9 +1,13 @@
-<?php
+<?php 
 
 namespace App\Http\Controllers;
 
 use App\Models\Store;
+use App\Models\SpecificInventory;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\SpecificInventoryImport;
+
 
 class StoreController extends Controller
 {
@@ -26,6 +30,7 @@ class StoreController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'nullable|string|max:255',
+            'Abr_Store' => 'required|string|max:255', // Validation pour Abr_Store
         ]);
 
         Store::create($request->all());
@@ -50,6 +55,7 @@ class StoreController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'nullable|string|max:255',
+            'Abr_Store' => 'required|string|max:255', // Validation pour Abr_Store
         ]);
 
         $store->update($request->all());
@@ -61,5 +67,21 @@ class StoreController extends Controller
     {
         $store->delete();
         return redirect()->route('stores.index')->with('success', 'Magasin supprimé avec succès.');
+    }
+
+    // Importer l'inventaire spécifique avec abr_store
+    public function importSpecificInventory(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        // Récupérer le fichier
+        $file = $request->file('file');
+
+        // Importer le fichier Excel
+        Excel::import(new SpecificInventoryImport($request->inventory_id), $file);
+
+        return redirect()->route('specificinventory.index')->with('success', 'Inventaire spécifique importé avec succès.');
     }
 }

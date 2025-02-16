@@ -5,65 +5,66 @@ namespace App\Http\Controllers;
 use App\Models\Inventory;
 use App\Models\StoreInventory;
 use App\Models\StoreInventoryItem;
+use App\Models\SpecificInventory;
 use Illuminate\Http\Request;
 use App\Models\Store;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StoreInventoryItemsImport;
-use App\Imports\StoreSpecificInventoryItemsImport;
-use App\Http\Controllers\InventoryController;
+use App\Imports\SpecificInventoryImport;
 
 class InventoryController extends Controller
 {
-    // Display a list of all inventories
+    // Afficher la liste de tous les inventaires
     public function index()
     {
         $inventories = Inventory::all();
         return view('inventories.index', compact('inventories'));
     }
 
-    // Display a specific inventory with its associated stores and products
+    // Afficher les détails d'un inventaire spécifique
     public function show($inventoryId)
     {
-        // Retrieve the inventory with associated stores and products
+        // Récupérer l'inventaire avec les magasins et produits associés
         $inventory = Inventory::with('storeInventories.storeInventoryItems')->findOrFail($inventoryId);
 
-        // Retrieve the associated store inventories
+        // Récupérer les magasins associés
         $storeInventories = $inventory->storeInventories;
 
         return view('inventories.show', compact('inventory', 'storeInventories'));
     }
 
-    // Display the form to create a new inventory
+    // Afficher le formulaire de création d'un inventaire
     public function create()
     {
         return view('inventories.create');
     }
 
-    // Save a new inventory to the database
+    // Enregistrer un nouvel inventaire dans la base de données
     public function store(Request $request)
-{
-    // Validation des données
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'type' => 'required|in:libre,specific,all', // Ajoutez cette ligne
-    ]);
+    {
+        // Validation des données
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:libre,specific,all',
+        ]);
 
-    // Création de l'inventaire
-    $inventory = Inventory::create([
-        'name' => $request->name,
-        'type' => $request->type, // Ajoutez cette ligne
-    ]);
+        // Création de l'inventaire
+        $inventory = Inventory::create([
+            'name' => $request->name,
+            'type' => $request->type,
+        ]);
 
-    return redirect()->route('inventories.index')->with('success', 'Inventaire créé avec succès.');
-}
-    // Display the form to edit an inventory
+        return redirect()->route('inventories.index')->with('success', 'Inventaire créé avec succès.');
+    }
+
+    // Afficher le formulaire de modification d'un inventaire
     public function edit($id)
     {
         $inventory = Inventory::findOrFail($id);
         return view('inventories.edit', compact('inventory'));
     }
 
-    // Update an existing inventory
+    // Mettre à jour un inventaire existant
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -78,7 +79,7 @@ class InventoryController extends Controller
         return redirect()->route('inventories.index')->with('success', 'Inventaire mis à jour avec succès.');
     }
 
-    // Delete an inventory
+    // Supprimer un inventaire
     public function destroy($id)
     {
         $inventory = Inventory::findOrFail($id);
@@ -87,15 +88,24 @@ class InventoryController extends Controller
         return redirect()->route('inventories.index')->with('success', 'Inventaire supprimé avec succès.');
     }
 
-    // Associate a store with an inventory
+    // Associer un magasin à un inventaire
     public function associateStore($inventoryId, Request $request)
     {
+        // Récupérer l'inventaire
+        $inventory = Inventory::findOrFail($inventoryId);
+
+        // Vérifier que l'inventaire n'est pas de type "specific"
+        if ($inventory->type === 'specific') {
+            return redirect()->route('inventories.show', $inventoryId)
+                             ->with('error', 'L\'association manuelle de magasins n\'est pas autorisée pour les inventaires de type "specific".');
+        }
+
         $request->validate([
             'store_id' => 'required',
         ]);
 
         if ($request->store_id === 'all') {
-            // Associate all stores not yet associated
+            // Associer tous les magasins non encore associés
             $stores = Store::whereNotIn('id', function ($query) use ($inventoryId) {
                 $query->select('store_id')
                       ->from('store_inventories')
@@ -114,7 +124,7 @@ class InventoryController extends Controller
                              ->with('success', 'Tous les magasins ont été associés à l\'inventaire.');
         }
 
-        // Associate a single store
+        // Associer un seul magasin
         $request->validate([
             'store_id' => 'exists:stores,id',
         ]);
@@ -138,7 +148,7 @@ class InventoryController extends Controller
                          ->with('success', 'Magasin associé à l\'inventaire.');
     }
 
-    // Add a product to a store inventory
+    // Ajouter un produit à un inventaire de magasin
     public function addProductToStoreInventory($inventoryId, $storeInventoryId, Request $request)
     {
         $request->validate([
@@ -159,116 +169,175 @@ class InventoryController extends Controller
         return redirect()->route('inventories.show', $inventoryId)->with('success', 'Produit ajouté à l\'inventaire.');
     }
 
+    // Importer des produits pour tous les magasins
     public function import(Request $request, $inventoryId)
     {
-        // Validate the file
+        // Valider le fichier
         $request->validate([
             'product_file' => 'required|mimes:xlsx,csv',
-            'store_inventory_id' => 'nullable|exists:store_inventories,id', // Optional, if a specific store is selected
+            'store_inventory_id' => 'nullable|exists:store_inventories,id', // Optionnel, si un magasin spécifique est sélectionné
         ]);
     
-        // Retrieve the inventory
+        // Récupérer l'inventaire
         $inventory = Inventory::findOrFail($inventoryId);
     
-        // Process the Excel/CSV file
+        // Traiter le fichier Excel/CSV
         $file = $request->file('product_file');
     
-        // If a specific store is selected, import for that store
+        // Si un magasin spécifique est sélectionné, importer pour ce magasin
         if ($request->store_inventory_id) {
             $storeInventoryId = $request->store_inventory_id;
     
-            // Verify before importing
+            // Vérifier avant d'importer
             $importedItems = Excel::toArray(new StoreInventoryItemsImport($storeInventoryId), $file)[0];
             foreach ($importedItems as $item) {
-                // Check if the product already exists for this store
+                // Vérifier si le produit existe déjà pour ce magasin
                 $existingItem = StoreInventoryItem::where('store_inventory_id', $storeInventoryId)
                                                   ->where('product_code', $item['product_code'])
                                                   ->exists();
     
-                // If the product already exists, skip it
+                // Si le produit existe déjà, l'ignorer
                 if ($existingItem) {
                     continue;
                 }
     
-                // If the product doesn't exist, add it
+                // Si le produit n'existe pas, l'ajouter
                 StoreInventoryItem::create([
                     'store_inventory_id' => $storeInventoryId,
                     'product_name' => $item['product_name'],
                     'product_code' => $item['product_code'],
-                    'onhand' => $item['onhand'], // Nouvelle colonne Onhand
+                    'onhand' => $item['onhand'], // Remplacer count_1 et count_2 par onhand
                 ]);
             }
     
-            // Update the store inventory status to "imported"
+            // Mettre à jour le statut de l'inventaire du magasin à "imported"
             $storeInventory = StoreInventory::findOrFail($storeInventoryId);
             $storeInventory->status = 'imported';
             $storeInventory->save();
         } else {
-            // If no specific store is selected, import for all stores associated with the inventory
+            // Si aucun magasin spécifique n'est sélectionné, importer pour tous les magasins associés à l'inventaire
             foreach ($inventory->storeInventories as $storeInventory) {
                 $importedItems = Excel::toArray(new StoreInventoryItemsImport($storeInventory->id), $file)[0];
                 foreach ($importedItems as $item) {
-                    // Check if the product already exists for this store
+                    // Vérifier si le produit existe déjà pour ce magasin
                     $existingItem = StoreInventoryItem::where('store_inventory_id', $storeInventory->id)
                                                       ->where('product_code', $item['product_code'])
                                                       ->exists();
     
                     if ($existingItem) {
-                        continue; // Skip if the product already exists
+                        continue; // Ignorer si le produit existe déjà
                     }
     
-                    // If the product doesn't exist, add it
+                    // Si le produit n'existe pas, l'ajouter
                     StoreInventoryItem::create([
                         'store_inventory_id' => $storeInventory->id,
                         'product_name' => $item['product_name'],
                         'product_code' => $item['product_code'],
-                        'onhand' => $item['onhand'], // Nouvelle colonne Onhand
+                        'onhand' => $item['onhand'], // Remplacer count_1 et count_2 par onhand
                     ]);
                 }
     
-                // Update the store inventory status to "imported"
+                // Mettre à jour le statut de l'inventaire du magasin à "imported"
                 $storeInventory->status = 'imported';
                 $storeInventory->save();
             }
         }
     
-        // Return a success message
+        // Retourner un message de succès
         return redirect()->back()->with('success', 'Les produits ont été importés avec succès et le statut a été mis à jour.');
     }
+    
+    // Importer des produits spécifiques pour un inventaire de type "specific"
+public function importSpecific(Request $request, $inventoryId)
+{
+    // Valider le fichier
+    $request->validate([
+        'file' => 'required|mimes:xlsx,csv',
+    ]);
 
-    // Import store-specific products
-    public function importSpecific(Request $request, $inventoryId)
-    {
-        // Validate the file
-        $request->validate([
-            'product_file' => 'required|mimes:xlsx,csv',
-        ]);
+    // Récupérer l'inventaire
+    $inventory = Inventory::findOrFail($inventoryId);
 
-        // Process the file
-        Excel::import(new StoreSpecificInventoryItemsImport($inventoryId), $request->file('product_file'));
-
-        // Update the status of all store inventories
-        StoreInventory::where('inventory_id', $inventoryId)->update(['status' => 'imported']);
-
-        // Redirect back with a success message
-        return redirect()->back()->with('success', 'Les produits spécifiques aux magasins ont été importés avec succès.');
+    // Vérifier que l'inventaire est de type "specific"
+    if ($inventory->type !== 'specific') {
+        return redirect()->back()->with('error', 'L\'importation est uniquement autorisée pour les inventaires de type "specific".');
     }
 
-    // Show the import form
+    // Importer le fichier Excel
+    Excel::import(new SpecificInventoryImport($inventory->id), $request->file('file'));
+
+    // Récupérer les magasins associés à partir du fichier Excel
+    $stores = $this->getStoresFromExcel($request->file('file'));
+
+    // Associer les magasins à l'inventaire dans la table store_inventories
+    foreach ($stores as $store) {
+        StoreInventory::updateOrCreate(
+            [
+                'inventory_id' => $inventory->id,
+                'store_id' => $store->id,
+            ],
+            [
+                'status' => 'imported', // Vous pouvez ajuster le statut selon vos besoins
+            ]
+        );
+    }
+
+    // Retourner un message de succès
+    return redirect()->back()->with('success', 'Les produits spécifiques et les associations de magasins ont été importés avec succès.');
+}
+
+// Méthode pour récupérer les magasins à partir du fichier Excel
+private function getStoresFromExcel($file)
+{
+    $stores = [];
+    $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+    $spreadsheet = $reader->load($file->getPathname());
+    $worksheet = $spreadsheet->getActiveSheet();
+
+    foreach ($worksheet->getRowIterator() as $row) {
+        $cellIterator = $row->getCellIterator();
+        $cellIterator->setIterateOnlyExistingCells(false);
+
+        $rowData = [];
+        foreach ($cellIterator as $cell) {
+            $rowData[] = $cell->getValue();
+        }
+
+        // Supposons que la colonne 'Abr_Store' est la quatrième colonne (index 3)
+        $abbrStore = $rowData[3];
+
+        // Récupérer le magasin correspondant
+        $store = Store::where('Abr_Store', $abbrStore)->first();
+        if ($store) {
+            $stores[] = $store;
+        }
+    }
+
+    return $stores;
+}
+
+    // Afficher le formulaire d'importation
     public function showImportForm($inventoryId)
     {
-        // Find the inventory
+        // Trouver l'inventaire
         $inventory = Inventory::findOrFail($inventoryId);
 
-        // Pass the inventory to the view
+        // Passer l'inventaire à la vue
         return view('inventories.import', compact('inventory'));
     }
 
-    // Show the form to associate a store with an inventory
+    // Afficher le formulaire pour associer un magasin à un inventaire
     public function showAssociateStoreForm($inventoryId)
-    {
-        $inventory = Inventory::findOrFail($inventoryId);
-        $stores = Store::all(); // Retrieve all stores
-        return view('inventories.associate_store', compact('inventory', 'stores'));
+{
+    $inventory = Inventory::findOrFail($inventoryId);
+
+    // Vérifier que l'inventaire n'est pas de type "specific"
+    if ($inventory->type === 'specific') {
+        return redirect()->route('inventories.show', $inventoryId)
+                         ->with('error', 'L\'association manuelle de magasins n\'est pas autorisée pour les inventaires de type "specific".');
     }
+
+    $stores = Store::all(); // Récupérer tous les magasins
+    return view('inventories.associate_store', compact('inventory', 'stores'));
+}
 }
